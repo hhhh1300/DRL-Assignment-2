@@ -247,17 +247,16 @@ class Game2048Env(gym.Env):
 
 with open('approximator_small.pkl', 'rb') as f:
     approximator = pickle.load(f)
-
-env = Game2048Env()
-
-td_mcts = TD_MCTS(env, approximator, iterations=50, exploration_constant=1.41, rollout_depth=10, gamma=0.99)
 previous_score = 0
 def get_action(state, score):
+    # print (score)
     global previous_score
-    global env
+    env = Game2048Env()
     env.board = state.copy()
-    env.score = score
-    
+    env.score = score    
+
+
+    td_mcts = TD_MCTS(env, approximator, iterations=50, exploration_constant=1.41, rollout_depth=10, gamma=0.99)
         
     # Create the root node from the current state
     root = TD_MCTS_Node(env, state, env.score)
@@ -270,27 +269,27 @@ def get_action(state, score):
     best_act, _ = td_mcts.best_action_distribution(root)
 
     return best_act  
-    # legal_moves = [a for a in range(4) if env.is_move_legal(a)]
+    legal_moves = [a for a in range(4) if env.is_move_legal(a)]
     
-    # best_value = -1e9
-    # best_action = None
-    # for a in legal_moves:
-    #     sim_env = copy.deepcopy(env)
-    #     sim_env.board = state.copy()
-    #     sim_env.score = previous_score
+    best_value = -1e9
+    best_action = None
+    for a in legal_moves:
+        sim_env = copy.deepcopy(env)
+        sim_env.board = state.copy()
+        sim_env.score = previous_score
 
-    #     next_state, next_score, _, _, _ = sim_env.act(a)
-    #     r = next_score - previous_score  # immediate reward
-    #     v_next = approximator.value(next_state)
-    #     if r + v_next > best_value:
-    #         best_value = r + v_next
-    #         best_action = a
-    # # print (r, previous_score)
-    # action = best_action
-    # state, reward, done, _ = env.step(action)  # Apply the selected action
+        next_state, next_score, _, _, _ = sim_env.act(a)
+        r = next_score - previous_score  # immediate reward
+        v_next = approximator.value(next_state)
+        if r + v_next > best_value:
+            best_value = r + v_next
+            best_action = a
+    # print (r, previous_score)
+    action = best_action
+    state, reward, done, _ = env.step(action)  # Apply the selected action
 
-    # previous_score = reward
-    # return action
+    previous_score = reward
+    return action
     # You can submit this random agent to evaluate the performance of a purely random strategy.
 
 

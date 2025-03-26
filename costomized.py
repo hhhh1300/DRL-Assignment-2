@@ -551,7 +551,9 @@ class TD_MCTS:
             if uct > best_value:
                 best_value = uct
                 best_child = child
-
+            # print (q, self.c * math.sqrt(
+            #     math.log(node.visits) / child.visits
+            # ))
         return best_child
 
 
@@ -559,24 +561,31 @@ class TD_MCTS:
         # TODO: Perform a random rollout until reaching the maximum depth or a terminal state.
         # TODO: Use the approximator to evaluate the final state.
         initial_score = self.approximator.value(sim_env.board)
-        # final_score = initial_score
-        # decay_factor = 0.95
-        # cnt = 1
-        # for _ in range(depth):
-        #     legal_moves = [a for a in range(4) if sim_env.is_move_legal(a)]
-        #     if not legal_moves:
-        #         break
-        #     action = np.random.choice(legal_moves)
-        #     board, reward, done, _ = sim_env.step(action)
-        #     final_score += self.approximator.value(board) * decay_factor
-        #     decay_factor *= self.gamma
-        #     cnt += 1
-        #     if done:
-        #         break
+        final_score = initial_score
+        decay_factor = 0.95
+        cnt = 1
+        for _ in range(1):
+            legal_moves = [a for a in range(4) if sim_env.is_move_legal(a)]
+            if not legal_moves:
+                break
+            # action = np.random.choice(legal_moves)
+            for action in legal_moves:
+                sim_env_copy = copy.deepcopy(sim_env)
+                sim_env_copy.board = sim_env.board.copy()
+                sim_env_copy.score = sim_env.score
+                
+                board, reward, moved, done, _ = sim_env_copy.act(action)
+                final_score += self.approximator.value(board) * decay_factor
+                
+            decay_factor *= self.gamma
+            cnt += 1
+            if done:
+                break
         # print (self.approximator.value(sim_env.board), initial_score)
         # print (self.approximator.value(sim_env.board))
         # return self.approximator.value(sim_env.board)
-        return initial_score
+        # print (final_score, initial_score)
+        return final_score
 
 
     def backpropagate(self, node, reward):
